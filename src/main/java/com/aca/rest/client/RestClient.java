@@ -70,7 +70,8 @@ public class RestClient {
     }
 
     private static void printHelp() {
-        System.out.println(String.format("Usage example %s", "-t mymemory -u pepe -p pepe -lp en|es"));
+        //TODO Make this more user friendly
+        System.out.println(String.format("Usage example %s or %s", "-t mymemory -u YourUserName -p YourPassword -lp en|es", "-t yandex --apiKey YourApiKey -l en-es"));
     }
 
     private static LocalDateTime getStartTime() {
