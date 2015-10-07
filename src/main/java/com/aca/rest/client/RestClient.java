@@ -44,7 +44,6 @@ public class RestClient {
             String type = args[1];
             switch (type) {
                 case "mymemory":
-//                    -t mymemory -u pepe -p pepe -lp en|es
                     translator = translatorFactory.createMyMemory();
                     break;
                 case "yandex":
@@ -98,7 +97,12 @@ public class RestClient {
                 linesStream.map(String::trim)
                         .filter(l -> !l.isEmpty())
                         .map(l -> wrappedTranslate(l))
-                        .forEach(tl -> out.println(tl));
+                        .forEach(tl -> {
+                            if (!translator.isIsLimitReached()) {
+                                out.println(tl);
+                                System.out.println(tl);
+                            }
+                        });
             } catch (IOException e) {
                 java.util.logging.Logger.getLogger(RestClient.class.getName()).log(Level.SEVERE, null, e);
             }
@@ -119,8 +123,9 @@ public class RestClient {
     private static String wrappedTranslate(String l) {
         try {
             return translator.translate(l);
-        } catch (TranslationLimitException ex) {
-            throw new RuntimeException(ex.getMessage());
+        } catch (TranslationLimitException | ClassCastException ex) {
+            System.out.println(ex.getMessage());
+            return "";
         }
     }
 }

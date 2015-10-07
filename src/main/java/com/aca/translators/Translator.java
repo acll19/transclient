@@ -17,6 +17,7 @@ public abstract class Translator {
     
     protected final Client CLIENT = ClientBuilder.newClient();
     private LocalDateTime startTime;
+    private boolean limitReached;
     
     public  abstract String translate(String source) throws TranslationLimitException;
     
@@ -29,6 +30,20 @@ public abstract class Translator {
     
     public LocalDateTime getStartTime() {
         return startTime;
+    }
+
+    /**
+     * @return the limitReached
+     */
+    public boolean isIsLimitReached() {
+        return limitReached;
+    }
+
+    /**
+     * @param limitReached the limitReached to set
+     */
+    protected void setLimitReached(boolean limitReached) {
+        this.limitReached = limitReached;
     }
     
 }

@@ -22,7 +22,7 @@ public class MyMemory extends Translator {
     private String langpair;
     private final String CLIENT_URL = "http://api.mymemory.translated.net";
     private String apiKey;
-    private int limit;
+    private int currentWordCount;
     private String userName;
     private String password;
     private String de;
@@ -30,7 +30,7 @@ public class MyMemory extends Translator {
     public MyMemory(String langpair, String apiKey) {
         this.langpair = langpair;
         this.apiKey = apiKey;
-        this.limit = 1000;
+        this.currentWordCount = 1000;
     }
 
     public MyMemory() {
@@ -39,14 +39,14 @@ public class MyMemory extends Translator {
     public MyMemory(String langpair, String apiKey, String email) {
         this.langpair = langpair;
         this.apiKey = apiKey;
-        this.limit = 1000;
+        this.currentWordCount = 1000;
         this.de = email;
     }
 
     public MyMemory(String langpair, String apiKey, String userName, String passwd) {
         this.langpair = langpair;
         this.apiKey = apiKey;
-        this.limit = 1000;
+        this.currentWordCount = 1000;
         this.userName = userName;
         this.password = passwd;
     }
@@ -90,6 +90,7 @@ public class MyMemory extends Translator {
                 String transUrl = CLIENT_URL + "/get";
                 String response = CLIENT.target(transUrl)
                         .queryParam("q", source)
+                        .queryParam("de", this.de)
                         .queryParam("langpair", this.langpair)
                         .queryParam("apiKey", this.apiKey)
                         .request().get(String.class);
@@ -99,45 +100,41 @@ public class MyMemory extends Translator {
                         .getString("translatedText");
                 return traslation;
             } catch (Exception e) {
-                java.util.logging.Logger.getLogger(MyMemory.class.getName()).log(Level.SEVERE, null, e);
+                throw e;
             }
         }
+        this.setLimitReached(true);
         throw new TranslationLimitException("MyMemory API word limit has been reached. Please try again in 24 hrs.");
     }
 
     private boolean isTimeOk() {
+        LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
         if (getStartTime() == null) {
-            setStartTime(LocalDateTime.now(ZoneId.systemDefault()));
+            setStartTime(now);
             return true;
         }
-        LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
+        
         LocalDateTime nowMinus24 = now.minusHours(24);
         return !nowMinus24.isAfter(getStartTime());
     }
 
     private boolean isWordCountOk(String source) {
         boolean hasEmail = this.de != null && de.length() > 0;
-        int count = 10000;
+        int limit = 10000;
         if (!hasEmail) {
-            count = 1000;
-        }
-        if (this.limit == 0) {
-            if (!hasEmail) {
-                limit = 1000;
-            } else {
-                limit = 1000;
-            }
+            limit = 1000;
         }
 
-        String[] words = source.split(" ");
+        String[] sourceWords = source.split(" ");
+        int sourceWordCount = sourceWords.length;
 
-        if (count - words.length < this.limit) {
-            this.limit -= words.length;
+        if (this.currentWordCount + sourceWordCount <= limit) {
+            this.currentWordCount += sourceWordCount;
             return true;
         }
 
         if (isTimeOk()) {
-            this.limit = count;
+            this.currentWordCount = limit;
             return true;
         }
         return false;
